@@ -1,4 +1,6 @@
+require('dotenv').config()
 const Product = require('../models/Product')
+const CATEGORY_MAP = require('../config/categoryMap')
 
 const getProducts = async (req, res) => {
   try {
@@ -14,7 +16,6 @@ const getProducts = async (req, res) => {
       limit = 20
     } = req.query
 
-    // Construimos el filtro dinámicamente
     const filtro = {}
 
     if (categoria) filtro.categoria = categoria
@@ -27,23 +28,18 @@ const getProducts = async (req, res) => {
       if (precioMax) filtro.precio.$lte = Number(precioMax)
     }
 
-    // Ordenamiento
     const ordenMap = {
       'precio_asc': { precio: 1 },
       'precio_desc': { precio: -1 },
       'nombre_asc': { nombre: 1 },
-      'reciente': { ultimaActualizacion: -1 }
+      'reciente': { ultimaActualizacion: -1 },
+      'descuento': { descuento: -1 }
     }
     const ordenFinal = ordenMap[orden] || { ultimaActualizacion: -1 }
-
-    // Paginación
     const skip = (Number(page) - 1) * Number(limit)
 
     const [productos, total] = await Promise.all([
-      Product.find(filtro)
-        .sort(ordenFinal)
-        .skip(skip)
-        .limit(Number(limit)),
+      Product.find(filtro).sort(ordenFinal).skip(skip).limit(Number(limit)),
       Product.countDocuments(filtro)
     ])
 
@@ -63,6 +59,10 @@ const getProductById = async (req, res) => {
   try {
     const producto = await Product.findById(req.params.id)
     if (!producto) return res.status(404).json({ error: 'Producto no encontrado' })
+
+    // Suma 1 vista cada vez que se consulta el detalle
+    await Product.findByIdAndUpdate(req.params.id, { $inc: { vistas: 1 } })
+
     res.json(producto)
   } catch (error) {
     res.status(500).json({ error: error.message })
@@ -87,4 +87,86 @@ const getMarcas = async (req, res) => {
   }
 }
 
-module.exports = { getProducts, getProductById, getCategorias, getMarcas }
+const getCategoriasAgrupadas = async (req, res) => {
+  try {
+    res.json(CATEGORY_MAP)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+}
+
+const getProductsByCategoriaPadre = async (req, res) => {
+  try {
+    const { nombre } = req.params
+    const categoria = CATEGORY_MAP.find(c =>
+      c.nombre.toLowerCase() === decodeURIComponent(nombre).toLowerCase()
+    )
+    if (!categoria) return res.status(404).json({ error: 'Categoría no encontrada' })
+
+    const { precioMin, precioMax, orden, page = 1, limit = 20 } = req.query
+    const filtro = { categoria: { $in: categoria.subcategorias } }
+
+    if (precioMin || precioMax) {
+      filtro.precio = {}
+      if (precioMin) filtro.precio.$gte = Number(precioMin)
+      if (precioMax) filtro.precio.$lte = Number(precioMax)
+    }
+
+    const ordenMap = {
+      'precio_asc': { precio: 1 },
+      'precio_desc': { precio: -1 },
+      'nombre_asc': { nombre: 1 },
+      'descuento': { descuento: -1 }
+    }
+    const ordenFinal = ordenMap[orden] || { ultimaActualizacion: -1 }
+    const skip = (Number(page) - 1) * Number(limit)
+
+    const [productos, total] = await Promise.all([
+      Product.find(filtro).sort(ordenFinal).skip(skip).limit(Number(limit)),
+      Product.countDocuments(filtro)
+    ])
+
+    res.json({
+      productos,
+      total,
+      pagina: Number(page),
+      totalPaginas: Math.ceil(total / Number(limit))
+    })
+
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+}
+
+const getDescuentos = async (req, res) => {
+  try {
+    const productos = await Product.find({ descuento: { $gt: 0 } })
+      .sort({ descuento: -1 })
+      .limit(10)
+    res.json(productos)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+}
+
+const getMasBuscados = async (req, res) => {
+  try {
+    const productos = await Product.find()
+      .sort({ vistas: -1 })
+      .limit(10)
+    res.json(productos)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+}
+
+module.exports = {
+  getProducts,
+  getProductById,
+  getCategorias,
+  getMarcas,
+  getCategoriasAgrupadas,
+  getProductsByCategoriaPadre,
+  getDescuentos,
+  getMasBuscados
+}

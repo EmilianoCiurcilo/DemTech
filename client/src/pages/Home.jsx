@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react'
 import { getProducts, getCategorias } from '../services/productService'
 import { useNavigate, Link } from 'react-router-dom'
+import Navbar from '../components/Navbar'
 import { useAuth } from '../context/useAuth'
-
+import { addFavorite, getFavorites, removeFavorite } from '../services/productService'
 
 function Home() {
   const [productos, setProductos] = useState([])
   const [categorias, setCategorias] = useState([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
+  const [favoritos, setFavoritos] = useState([])
   const [filtros, setFiltros] = useState({
     busqueda: '',
     categoria: '',
@@ -18,8 +20,8 @@ function Home() {
     page: 1
   })
 
-const navigate = useNavigate()
-const { usuario, logout } = useAuth()
+
+  const navigate = useNavigate()
 
   useEffect(() => {
     getCategorias().then(setCategorias)
@@ -41,46 +43,50 @@ const { usuario, logout } = useAuth()
     fetchProducts()
   }, [filtros])
 
+
+
   const handleFiltro = (campo, valor) => {
     setFiltros(prev => ({ ...prev, [campo]: valor, page: 1 }))
   }
 
+  const { usuario } = useAuth()
+
+  const handleFavorito = async (e, producto) => {
+    e.stopPropagation()
+    if (!usuario) return navigate('/login')
+    try {
+      if (favoritos.includes(producto._id)) {
+        await removeFavorite(producto._id, usuario.token)
+        setFavoritos(prev => prev.filter(id => id !== producto._id))
+      } else {
+        await addFavorite(producto._id, producto.precio, usuario.token)
+        setFavoritos(prev => [...prev, producto._id])
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  useEffect(() => {
+    const cargarFavoritos = async () => {
+      if (!usuario) return
+      try {
+        const data = await getFavorites(usuario.token)
+        setFavoritos(data.map(f => f.producto._id))
+      } catch (error) {
+        console.error(error)
+      }
+    }
+    cargarFavoritos()
+  }, [usuario])
+
   return (
     <div className="min-h-screen bg-gray-950 text-white">
 
-      {/* Navbar */}
-      <nav className="bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
-        <h1 className="text-2xl font-bold text-cyan-400 tracking-tight">DemTech</h1>
-        <input
-          type="text"
-          placeholder="Buscar producto..."
-          value={filtros.busqueda}
-          onChange={e => handleFiltro('busqueda', e.target.value)}
-          className="bg-gray-800 text-white placeholder-gray-500 rounded-lg px-4 py-2 w-96 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm"
-        />
-        <div className="flex gap-3 items-center">
-  {usuario ? (
-    <>
-      <span className="text-sm text-gray-400">Hola, {usuario.nombre}</span>
-      <button
-        onClick={logout}
-        className="text-sm text-gray-400 hover:text-white transition"
-      >
-        Cerrar sesión
-      </button>
-    </>
-  ) : (
-    <>
-      <Link to="/login" className="text-sm text-gray-400 hover:text-white transition">
-        Iniciar sesión
-      </Link>
-      <Link to="/register" className="bg-cyan-500 hover:bg-cyan-400 text-black font-semibold text-sm px-4 py-2 rounded-lg transition">
-        Registrarse
-      </Link>
-    </>
-  )}
-</div>
-      </nav>
+      <Navbar
+
+  onBusqueda={(valor) => handleFiltro('busqueda', valor)}
+  busqueda={filtros.busqueda}/>
 
       <div className="flex">
 
@@ -193,11 +199,33 @@ const { usuario, logout } = useAuth()
           {producto.nombre}
         </p>
         <div className="mt-auto">
-          <p className="text-lg font-bold text-white">
-            ${producto.precio?.toLocaleString('es-AR')}
-          </p>
-          <p className="text-xs text-gray-500 mt-1">{producto.tienda}</p>
-        </div>
+  {producto.precioAnterior && (
+    <p className="text-xs text-gray-500 line-through">
+      ${producto.precioAnterior?.toLocaleString('es-AR')}
+    </p>
+  )}
+  <div className="flex items-center gap-2">
+    <p className="text-lg font-bold text-white">
+      ${producto.precio?.toLocaleString('es-AR')}
+    </p>
+    {producto.descuento > 0 && (
+      <span className="text-xs bg-green-900 text-green-400 px-2 py-0.5 rounded-full font-semibold">
+        -{producto.descuento}%
+      </span>
+    )}
+  </div>
+  <p className="text-xs text-gray-500 mt-1">{producto.tienda}</p>
+  <button
+  onClick={(e) => handleFavorito(e, producto)}
+  className={`mt-2 w-full text-xs py-1.5 rounded-lg transition border ${
+    favoritos.includes(producto._id)
+      ? 'bg-red-900/30 border-red-700 text-red-400'
+      : 'border-gray-700 hover:border-cyan-500 text-gray-400 hover:text-cyan-400'
+  }`}
+>
+  {favoritos.includes(producto._id) ? '♥ En favoritos' : '♡ Favoritos'}
+</button>
+</div>
       </div>
     ))}
   </div>

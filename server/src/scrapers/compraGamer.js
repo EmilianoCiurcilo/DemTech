@@ -102,30 +102,45 @@ const scrapearCategoria = async (page, categoria) => {
   await new Promise(r => setTimeout(r, 2000))
 
   const productos = await page.evaluate((categoriaNombre) => {
-    const items = document.querySelectorAll('.product-card')
-    const resultado = []
+  const items = document.querySelectorAll('.product-card')
+  const resultado = []
 
-    items.forEach(item => {
-      const nombre = item.querySelector('[class*="title"], [class*="name"], h2, h3')?.innerText?.trim()
-      const precioTexto = item.querySelector('[class*="price"], [class*="precio"]')?.innerText?.trim()
-      const imagen = item.querySelector('img')?.src
+  items.forEach(item => {
+    const nombre = item.querySelector('[class*="title"], [class*="name"], h2, h3')?.innerText?.trim()
+    const imagen = item.querySelector('img')?.src
+    const url = item.querySelector('a')?.href || ''
 
-      // Buscamos el link en el item o en su padre
-      const url = item.querySelector('a')?.href || ''
+    const precioActualEl = item.querySelector('[class*="price--current"], [class*="txt_price"]')
+    const precioAnteriorEl = item.querySelector('[class*="price--previous"]')
+    const precioContainer = item.querySelector('[class*="price"], [class*="precio"]')
 
-      if (nombre && precioTexto) {
-        const precio = parseFloat(
-          precioTexto.replace(/[^0-9,]/g, '').replace(',', '.').trim()
-        )
+    const limpiarPrecio = (texto) => {
+      if (!texto) return null
+      const match = texto.replace(/\./g, '').replace(',', '.').match(/[\d]+/)
+      return match ? parseFloat(match[0]) : null
+    }
 
-        if (!isNaN(precio) && precio > 0) {
-          resultado.push({ nombre, precio, imagen, url, categoria: categoriaNombre })
-        }
-      }
-    })
+    const precioActual = limpiarPrecio(precioActualEl?.innerText)
+    const precioAnterior = limpiarPrecio(precioAnteriorEl?.innerText)
+    const precioFinal = precioActual || limpiarPrecio(precioContainer?.innerText?.split('\n')[0])
 
-    return resultado
-  }, categoria.nombre)
+    if (nombre && precioFinal && precioFinal > 0) {
+      resultado.push({
+        nombre,
+        precio: precioFinal,
+        precioAnterior: precioAnterior || null,
+        descuento: precioAnterior && precioFinal
+          ? Math.round(((precioAnterior - precioFinal) / precioAnterior) * 100)
+          : 0,
+        imagen,
+        url,
+        categoria: categoriaNombre
+      })
+    }
+  })
+
+  return resultado
+}, categoria.nombre)
 
   console.log('URL primer producto:', productos[0]?.url)
 console.log('Nombre primer producto:', productos[0]?.nombre)

@@ -32,7 +32,7 @@ function Register() {
   return (
     <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        <h1 className="text-3xl font-bold text-cyan-400 text-center mb-2">DemTech</h1>
+        <Link to="/" className="text-3xl font-bold text-cyan-400 text-center mb-2 block">DemTech</Link>
         <p className="text-gray-500 text-center text-sm mb-8">Creá tu cuenta gratis</p>
 
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8">

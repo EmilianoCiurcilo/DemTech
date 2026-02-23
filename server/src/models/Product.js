@@ -11,9 +11,14 @@ const productSchema = new mongoose.Schema({
   url: { type: String },
   imagen: { type: String },
   stock: { type: Boolean, default: true },
-  specs: { type: Object, default: {} },
+  specs: { type: mongoose.Schema.Types.Mixed, default: {} },
+  vistas: { type: Number, default: 0 },
   ultimaActualizacion: { type: Date, default: Date.now }
-}, { timestamps: true })
+}, {
+  timestamps: true,
+  strict: false
+})
 
 productSchema.index({ nombre: 1, tienda: 1 }, { unique: true })
+
 module.exports = mongoose.model('Product', productSchema)
