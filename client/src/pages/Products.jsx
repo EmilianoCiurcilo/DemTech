@@ -1,31 +1,14 @@
+import { useRef } from 'react'
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import axios from 'axios'
 import Navbar from '../components/Navbar'
 import { useAuth } from '../context/useAuth'
 import { addFavorite, removeFavorite, getFavorites } from '../services/productService'
+import CategoryIcon from '../components/CategoryIcon'
+import ScrollArrow from '../components/ScrollArrow'
 
 const API = 'http://localhost:3001/api'
-
-const CATEGORY_ICONS = {
-  'Procesadores': '⚡',
-  'Placas de Video': '🎮',
-  'Motherboards': '🖥️',
-  'Memorias RAM': '🧠',
-  'Almacenamiento': '💾',
-  'Fuentes': '🔌',
-  'Gabinetes': '🗄️',
-  'Refrigeración': '❄️',
-  'Pantallas': '🖥',
-  'Periféricos': '⌨️',
-  'Notebooks': '💻',
-  'PC Armadas': '🖥️',
-  'Combos': '📦',
-  'Sillas Gamer': '🪑',
-  'Consolas de Videojuego': '🕹️',
-  'Impresoras e Insumos': '🖨️',
-  'Otros': '🔧',
-}
 
 function Products() {
   const navigate = useNavigate()
@@ -39,9 +22,11 @@ function Products() {
   const [loading, setLoading] = useState(true)
   const [favoritos, setFavoritos] = useState([])
   const [precioMaxDB, setPrecioMaxDB] = useState(10000000)
+  const catChipRef = useRef(null)
+  const scrollChips = (dir) => catChipRef.current?.scrollBy({ left: dir * 300, behavior: 'smooth' })
 
   const [filtros, setFiltros] = useState({
-    busqueda: '',
+    busqueda: searchParams.get('busqueda') || '',
     categoria: searchParams.get('categoria') || '',
     marcasSeleccionadas: [],
     precioMin: 0,
@@ -153,36 +138,47 @@ function Products() {
       />
 
       {/* Chips de categorías */}
-      <div className="border-b border-white/5 sticky top-14 z-40"
-        style={{ background: 'rgba(8,8,15,0.95)', backdropFilter: 'blur(20px)' }}>
-        <div className="max-w-screen-xl mx-auto px-6 py-3 flex gap-2 overflow-x-auto"
-          style={{ scrollbarWidth: 'none' }}>
-          <button
-            onClick={() => handleFiltro('categoria', '')}
-            className={`shrink-0 text-xs px-4 py-1.5 rounded-full border transition font-medium ${
-              filtros.categoria === ''
-                ? 'border-violet-500 text-white'
-                : 'border-white/10 text-gray-400 hover:border-white/30 hover:text-white'
-            }`}
-            style={filtros.categoria === '' ? { background: 'rgba(124,58,237,0.2)' } : {}}>
-            Todos
-          </button>
-          {categorias.map(cat => (
-            <button
-              key={cat.nombre}
-              onClick={() => handleFiltro('categoria', cat.nombre)}
-              className={`shrink-0 text-xs px-4 py-1.5 rounded-full border transition font-medium flex items-center gap-1.5 ${
-                filtros.categoria === cat.nombre
-                  ? 'border-violet-500 text-white'
-                  : 'border-white/10 text-gray-400 hover:border-white/30 hover:text-white'
-              }`}
-              style={filtros.categoria === cat.nombre ? { background: 'rgba(124,58,237,0.2)' } : {}}>
-              <span>{CATEGORY_ICONS[cat.nombre] || '📦'}</span>
-              {cat.nombre}
-            </button>
-          ))}
-        </div>
-      </div>
+<div className="border-b border-white/5 sticky top-14 z-40"
+  style={{ background: 'rgba(8,8,15,0.95)', backdropFilter: 'blur(20px)' }}>
+  <div className="max-w-screen-xl mx-auto px-6 py-3 flex items-center gap-2">
+
+    <ScrollArrow direction="left" onClick={() => scrollChips(-1)} />
+
+    <div ref={catChipRef}
+      className="flex gap-2 overflow-x-auto flex-1"
+      style={{ scrollbarWidth: 'none' }}>
+      <button
+        onClick={() => handleFiltro('categoria', '')}
+        className={`shrink-0 text-xs px-4 py-1.5 rounded-full border transition font-medium ${
+          filtros.categoria === ''
+            ? 'border-violet-500 text-white'
+            : 'border-white/10 text-gray-400 hover:border-white/30 hover:text-white'
+        }`}
+        style={filtros.categoria === '' ? { background: 'rgba(124,58,237,0.2)' } : {}}>
+        Todos
+      </button>
+      {categorias.map(cat => (
+        <button
+          key={cat.nombre}
+          onClick={() => handleFiltro('categoria', cat.nombre)}
+          className={`shrink-0 text-xs px-4 py-1.5 rounded-full border transition font-medium flex items-center gap-1.5 ${
+            filtros.categoria === cat.nombre
+              ? 'border-violet-500 text-white'
+              : 'border-white/10 text-gray-400 hover:border-white/30 hover:text-white'
+          }`}
+          style={filtros.categoria === cat.nombre ? { background: 'rgba(124,58,237,0.2)' } : {}}>
+          <span className="w-3.5 h-3.5 flex items-center justify-center shrink-0">
+            <CategoryIcon nombre={cat.nombre} />
+          </span>
+          {cat.nombre}
+        </button>
+      ))}
+    </div>
+
+    <ScrollArrow direction="right" onClick={() => scrollChips(1)} />
+
+  </div>
+</div>
 
       <div className="max-w-screen-xl mx-auto px-6 py-6 flex gap-6">
 

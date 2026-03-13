@@ -2,28 +2,10 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import Navbar from '../components/Navbar'
+import CategoryIcon from '../components/CategoryIcon'
+import ScrollArrow from '../components/ScrollArrow'
 
 const API = 'http://localhost:3001/api'
-
-const CATEGORY_ICONS = {
-  'Procesadores': '⚡',
-  'Placas de Video': '🎮',
-  'Motherboards': '🖥️',
-  'Memorias RAM': '🧠',
-  'Almacenamiento': '💾',
-  'Fuentes': '🔌',
-  'Gabinetes': '🗄️',
-  'Refrigeración': '❄️',
-  'Pantallas': '🖥',
-  'Periféricos': '⌨️',
-  'Notebooks': '💻',
-  'PC Armadas': '🖥️',
-  'Combos': '📦',
-  'Sillas Gamer': '🪑',
-  'Consolas de Videojuego': '🕹️',
-  'Impresoras e Insumos': '🖨️',
-  'Otros': '🔧',
-}
 
 function ProductCard({ producto, onClick }) {
   return (
@@ -70,7 +52,18 @@ function Home() {
   const [descuentos, setDescuentos] = useState([])
   const [masBuscados, setMasBuscados] = useState([])
   const [loading, setLoading] = useState(true)
+  const [busqueda, setBusqueda] = useState('')
   const catScrollRef = useRef(null)
+
+  const handleBusqueda = (val) => {
+  setBusqueda(val)
+}
+
+  const handleBusquedaSubmit = (e) => {
+  if (e.key === 'Enter' && busqueda.trim()) {
+    navigate(`/productos?busqueda=${encodeURIComponent(busqueda.trim())}`)
+  }
+}
 
   useEffect(() => {
     const fetchData = async () => {
@@ -102,7 +95,11 @@ function Home() {
 
   return (
     <div className="min-h-screen" style={{ background: '#08080f', color: 'white' }}>
-      <Navbar />
+      <Navbar 
+  onBusqueda={handleBusqueda} 
+  busqueda={busqueda}
+  onBusquedaKeyDown={handleBusquedaSubmit}
+/>
 
       {/* Banner placeholder */}
       <div className="max-w-screen-xl mx-auto px-6 pt-8">
@@ -115,36 +112,31 @@ function Home() {
         </div>
 
         {/* Categorías */}
-        <div className="mb-10">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-lg font-bold text-white">Categorías</h2>
-            <div className="flex gap-2">
-              <button onClick={() => scrollCats(-1)}
-                className="w-8 h-8 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:border-violet-500 transition flex items-center justify-center text-sm">
-                ←
-              </button>
-              <button onClick={() => scrollCats(1)}
-                className="w-8 h-8 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:border-violet-500 transition flex items-center justify-center text-sm">
-                →
-              </button>
-            </div>
-          </div>
+<div className="mb-10">
+  <h2 className="text-lg font-bold text-white mb-5">Categorías</h2>
+  <div className="relative flex items-center gap-2">
+    <ScrollArrow direction="left" onClick={() => scrollCats(-1)} />
+    <div ref={catScrollRef}
+      className="flex gap-3 overflow-x-auto"
+      style={{ scrollbarWidth: 'none' }}>
+      {categorias.map(cat => (
 
-          <div ref={catScrollRef}
-            className="flex gap-3 overflow-x-auto pb-2"
-            style={{ scrollbarWidth: 'none' }}>
-            {categorias.map(cat => (
-              <button key={cat.nombre} onClick={() => irACategoria(cat)}
-                className="shrink-0 flex flex-col items-center gap-2 px-5 py-4 rounded-2xl border border-white/5 hover:border-violet-500/50 transition-all duration-200 hover:-translate-y-0.5 group"
-                style={{ background: 'rgba(255,255,255,0.03)', minWidth: '100px' }}>
-                <span className="text-2xl">{CATEGORY_ICONS[cat.nombre] || '📦'}</span>
-                <span className="text-xs text-gray-400 group-hover:text-white transition text-center leading-tight">
-                  {cat.nombre}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
+        
+        <button key={cat.nombre} onClick={() => irACategoria(cat)}
+          className="shrink-0 flex flex-col items-center gap-2 px-5 py-4 rounded-2xl border border-white/5 hover:border-violet-500/50 transition-all duration-200 hover:-translate-y-0.5 group"
+          style={{ background: 'rgba(255,255,255,0.03)', minWidth: '100px' }}>
+          <span className="w-8 h-8 flex items-center justify-center">
+            <CategoryIcon nombre={cat.nombre} />
+          </span>
+          <span className="text-xs text-gray-400 group-hover:text-white transition text-center leading-tight">
+            {cat.nombre}
+          </span>
+        </button>
+      ))}
+    </div>
+    <ScrollArrow direction="right" onClick={() => scrollCats(1)} />
+  </div>
+</div>
 
         {/* Descuentos de la semana */}
         {descuentos.length > 0 && (

@@ -1,8 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
-import logoPPC from '../assets/ppc_logo.png'
+import logoPPC from '../assets/logo-ppc.png'
 
-function Navbar({ onBusqueda, busqueda }) {
+function Navbar({ onBusqueda, busqueda, onBusquedaKeyDown }) {
   const { usuario, logout } = useAuth()
   const navigate = useNavigate()
 
@@ -13,7 +13,7 @@ function Navbar({ onBusqueda, busqueda }) {
 
         {/* Logo */}
         <Link to="/" className="shrink-0">
-            <img src={logoPPC} alt="PrecioPC" className="h-8 object-contain" />
+            <img src={logoPPC} alt="PrecioPC" className="h-18 object-contain" />
         </Link>
 
         {/* Links */}
@@ -32,18 +32,23 @@ function Navbar({ onBusqueda, busqueda }) {
 
         {/* Buscador */}
         {onBusqueda && (
-          <div className="flex-1 max-w-md relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">🔍</span>
-            <input
-              type="text"
-              placeholder="Buscar productos..."
-              value={busqueda || ''}
-              onChange={e => onBusqueda(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 rounded-xl text-sm text-white placeholder-gray-500 border border-white/10 focus:outline-none focus:border-violet-500 transition"
-              style={{ background: 'rgba(255,255,255,0.05)' }}
-            />
-          </div>
-        )}
+    <div className="flex-1 max-w-md relative">
+      <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none"
+        fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <circle cx="11" cy="11" r="7" />
+        <path strokeLinecap="round" d="M21 21l-4.35-4.35" />
+      </svg>
+      <input
+        type="text"
+        placeholder="Buscar productos..."
+        value={busqueda || ''}
+        onChange={e => onBusqueda(e.target.value)}
+        onKeyDown={onBusquedaKeyDown}
+        className="w-full pl-9 pr-4 py-2 rounded-xl text-sm text-white placeholder-gray-500 border border-white/10 focus:outline-none focus:border-violet-500 transition"
+        style={{ background: 'rgba(255,255,255,0.05)' }}
+      />
+    </div>
+  )}
 
         {/* Auth */}
         <div className="ml-auto flex items-center gap-3 shrink-0">
