@@ -1,7 +1,5 @@
-const express = require('express')
-const router = express.Router()
-
-const {
+import express from 'express'
+import {
   getProducts,
   getProductById,
   getCategorias,
@@ -10,7 +8,9 @@ const {
   getProductsByCategoriaPadre,
   getDescuentos,
   getMasBuscados
-} = require('../controllers/productController')
+} from '../controllers/productController.js'
+
+const router = express.Router()
 
 router.get('/', getProducts)
 router.get('/categorias', getCategorias)
@@ -21,4 +21,4 @@ router.get('/marcas', getMarcas)
 router.get('/categoria/:nombre', getProductsByCategoriaPadre)
 router.get('/:id', getProductById)
 
-module.exports = router
+export default router

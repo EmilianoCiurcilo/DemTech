@@ -4,6 +4,8 @@ import axios from 'axios'
 import Navbar from '../components/Navbar'
 import { useAuth } from '../context/useAuth'
 import { addFavorite, removeFavorite, getFavorites } from '../services/productService'
+import favoritoIcon from '../assets/favorito.svg'
+import nofavoritoIcon from '../assets/no-favorito.svg'
 
 const API = 'http://localhost:3001/api'
 
@@ -90,6 +92,7 @@ function ProductDetail() {
     ? producto.precioAnterior - producto.precio
     : null
 
+    const FILTER_VIOLET = 'brightness(0) saturate(100%) invert(72%) sepia(42%) saturate(600%) hue-rotate(210deg) brightness(105%)'
   return (
     <div className="min-h-screen" style={{ background: '#08080f', color: 'white' }}>
       <Navbar />
@@ -188,16 +191,23 @@ function ProductDetail() {
                 </button>
               )}
 
-              <button
-                onClick={handleFavorito}
-                disabled={loadingFav}
-                className={`w-full py-3.5 rounded-xl font-semibold text-sm transition border ${
-                  esFavorito
-                    ? 'border-red-800 text-red-400 hover:bg-red-900/20'
-                    : 'border-white/10 text-gray-400 hover:border-violet-500 hover:text-violet-400'
-                }`}>
-                {loadingFav ? '...' : esFavorito ? '♥ Guardado en favoritos' : '♡ Agregar a favoritos'}
-              </button>
+              
+<button
+  onClick={handleFavorito}
+  disabled={loadingFav}
+  className="w-full py-3.5 rounded-xl font-bold border border-white/10 flex items-center justify-center gap-2 transition hover:border-violet-500/40 hover:bg-violet-500/5"
+>
+  <img
+    src={esFavorito ? favoritoIcon : nofavoritoIcon}
+    alt="favorito"
+    width={20}
+    height={20}
+    style={{ filter: FILTER_VIOLET, transition: 'filter 0.2s' }}
+  />
+  <span className="text-sm text-gray-300">
+    {esFavorito ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+  </span>
+</button>
             </div>
 
             {/* Specs si existen */}

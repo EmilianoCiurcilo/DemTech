@@ -1,10 +1,11 @@
-const express = require('express')
+import express from 'express'
+import { getFavorites, addFavorite, removeFavorite } from '../controllers/favoriteController.js'
+import { proteger } from '../middlewares/authMiddleware.js'
+
 const router = express.Router()
-const { getFavorites, addFavorite, removeFavorite } = require('../controllers/favoriteController')
-const { proteger } = require('../middlewares/authMiddleware')
 
 router.get('/', proteger, getFavorites)
 router.post('/', proteger, addFavorite)
 router.delete('/:productoId', proteger, removeFavorite)
 
-module.exports = router
+export default router

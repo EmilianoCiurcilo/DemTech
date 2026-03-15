@@ -95,4 +95,4 @@ const CATEGORY_MAP = [
   }
 ]
 
-module.exports = CATEGORY_MAP
+export default CATEGORY_MAP

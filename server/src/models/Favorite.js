@@ -1,4 +1,4 @@
-const mongoose = require('mongoose')
+import mongoose from 'mongoose'
 
 const favoriteSchema = new mongoose.Schema({
   usuario: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -9,4 +9,4 @@ const favoriteSchema = new mongoose.Schema({
 // Un usuario no puede tener el mismo producto dos veces
 favoriteSchema.index({ usuario: 1, producto: 1 }, { unique: true })
 
-module.exports = mongoose.model('Favorite', favoriteSchema)
+export default mongoose.model('Favorite', favoriteSchema)

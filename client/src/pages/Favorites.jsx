@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { useAuth } from '../context/useAuth'
 import { getFavorites, removeFavorite } from '../services/productService'
+import favoritoIcon from '../assets/favorito.svg'
+import nofavoritoIcon from '../assets/no-favorito.svg'
 
 function Favorites() {
   const navigate = useNavigate()
@@ -72,7 +74,13 @@ function Favorites() {
           </div>
         ) : favoritos.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-32 gap-4">
-            <p className="text-5xl">♡</p>
+            <img
+  src={favoritos.length > 0 ? favoritoIcon : nofavoritoIcon}
+  width={40}
+  height={40}
+  alt=""
+  style={{ filter: 'brightness(0) saturate(100%) invert(72%) sepia(42%) saturate(600%) hue-rotate(210deg) brightness(105%)', margin: '0 auto 16px' }}
+/>
             <p className="text-gray-400 text-lg font-medium">No tenés favoritos todavía</p>
             <p className="text-gray-600 text-sm">Guardá productos para seguir sus precios fácilmente</p>
             <button onClick={() => navigate('/productos')}

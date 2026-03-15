@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { useAuth } from '../context/useAuth'
 import axios from 'axios'
+import favoritoIcon from '../assets/favorito.svg'
 
 const API = 'http://localhost:3001/api'
 
@@ -129,11 +130,17 @@ function Profile() {
           </p>
           <div className="flex flex-col gap-1">
             <button onClick={() => navigate('/favoritos')}
-              className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-gray-400 hover:text-white hover:bg-white/5 transition text-left">
-              <span>♡</span>
-              <span>Mis favoritos</span>
-              <span className="ml-auto text-gray-700">→</span>
-            </button>
+  className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-gray-400 hover:text-white hover:bg-white/5 transition text-left">
+  <img
+    src={favoritoIcon}
+    alt="favoritos"
+    width={16}
+    height={16}
+    style={{ filter: 'brightness(0) saturate(100%) invert(72%) sepia(42%) saturate(600%) hue-rotate(210deg) brightness(105%)' }}
+  />
+  <span>Mis favoritos</span>
+  <span className="ml-auto text-gray-700">→</span>
+</button>
             <button onClick={() => navigate('/productos')}
               className="flex items-center gap-3 px-3 py-3 rounded-xl text-sm text-gray-400 hover:text-white hover:bg-white/5 transition text-left">
               <span>🛍️</span>

@@ -1,23 +1,11 @@
-require('dotenv').config()
-const Product = require('../models/Product')
-const CATEGORY_MAP = require('../config/categoryMap')
+import 'dotenv/config'
+import Product from '../models/Product.js'
+import CATEGORY_MAP from '../config/categoryMap.js'
 
-const getProducts = async (req, res) => {
+export const getProducts = async (req, res) => {
   try {
-    const {
-      categoria,
-      tienda,
-      marca,
-      precioMin,
-      precioMax,
-      orden,
-      busqueda,
-      page = 1,
-      limit = 20
-    } = req.query
-
+    const { categoria, tienda, marca, precioMin, precioMax, orden, busqueda, page = 1, limit = 20 } = req.query
     const filtro = {}
-
     if (categoria) filtro.categoria = categoria
     if (tienda) filtro.tienda = tienda
     if (marca) filtro.marca = marca
@@ -27,7 +15,6 @@ const getProducts = async (req, res) => {
       if (precioMin) filtro.precio.$gte = Number(precioMin)
       if (precioMax) filtro.precio.$lte = Number(precioMax)
     }
-
     const ordenMap = {
       'precio_asc': { precio: 1 },
       'precio_desc': { precio: -1 },
@@ -37,39 +24,28 @@ const getProducts = async (req, res) => {
     }
     const ordenFinal = ordenMap[orden] || { ultimaActualizacion: -1 }
     const skip = (Number(page) - 1) * Number(limit)
-
     const [productos, total] = await Promise.all([
       Product.find(filtro).sort(ordenFinal).skip(skip).limit(Number(limit)),
       Product.countDocuments(filtro)
     ])
-
-    res.json({
-      productos,
-      total,
-      pagina: Number(page),
-      totalPaginas: Math.ceil(total / Number(limit))
-    })
-
+    res.json({ productos, total, pagina: Number(page), totalPaginas: Math.ceil(total / Number(limit)) })
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
 }
 
-const getProductById = async (req, res) => {
+export const getProductById = async (req, res) => {
   try {
     const producto = await Product.findById(req.params.id)
     if (!producto) return res.status(404).json({ error: 'Producto no encontrado' })
-
-    // Suma 1 vista cada vez que se consulta el detalle
     await Product.findByIdAndUpdate(req.params.id, { $inc: { vistas: 1 } })
-
     res.json(producto)
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
 }
 
-const getCategorias = async (req, res) => {
+export const getCategorias = async (req, res) => {
   try {
     const categorias = await Product.distinct('categoria')
     res.json(categorias)
@@ -78,7 +54,7 @@ const getCategorias = async (req, res) => {
   }
 }
 
-const getMarcas = async (req, res) => {
+export const getMarcas = async (req, res) => {
   try {
     const marcas = await Product.distinct('marca')
     res.json(marcas)
@@ -87,7 +63,7 @@ const getMarcas = async (req, res) => {
   }
 }
 
-const getCategoriasAgrupadas = async (req, res) => {
+export const getCategoriasAgrupadas = async (req, res) => {
   try {
     res.json(CATEGORY_MAP)
   } catch (error) {
@@ -95,23 +71,20 @@ const getCategoriasAgrupadas = async (req, res) => {
   }
 }
 
-const getProductsByCategoriaPadre = async (req, res) => {
+export const getProductsByCategoriaPadre = async (req, res) => {
   try {
     const { nombre } = req.params
     const categoria = CATEGORY_MAP.find(c =>
       c.nombre.toLowerCase() === decodeURIComponent(nombre).toLowerCase()
     )
     if (!categoria) return res.status(404).json({ error: 'Categoría no encontrada' })
-
     const { precioMin, precioMax, orden, page = 1, limit = 20 } = req.query
     const filtro = { categoria: { $in: categoria.subcategorias } }
-
     if (precioMin || precioMax) {
       filtro.precio = {}
       if (precioMin) filtro.precio.$gte = Number(precioMin)
       if (precioMax) filtro.precio.$lte = Number(precioMax)
     }
-
     const ordenMap = {
       'precio_asc': { precio: 1 },
       'precio_desc': { precio: -1 },
@@ -120,53 +93,30 @@ const getProductsByCategoriaPadre = async (req, res) => {
     }
     const ordenFinal = ordenMap[orden] || { ultimaActualizacion: -1 }
     const skip = (Number(page) - 1) * Number(limit)
-
     const [productos, total] = await Promise.all([
       Product.find(filtro).sort(ordenFinal).skip(skip).limit(Number(limit)),
       Product.countDocuments(filtro)
     ])
-
-    res.json({
-      productos,
-      total,
-      pagina: Number(page),
-      totalPaginas: Math.ceil(total / Number(limit))
-    })
-
+    res.json({ productos, total, pagina: Number(page), totalPaginas: Math.ceil(total / Number(limit)) })
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
 }
 
-const getDescuentos = async (req, res) => {
+export const getDescuentos = async (req, res) => {
   try {
-    const productos = await Product.find({ descuento: { $gt: 0 } })
-      .sort({ descuento: -1 })
-      .limit(10)
+    const productos = await Product.find({ descuento: { $gt: 0 } }).sort({ descuento: -1 }).limit(10)
     res.json(productos)
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
 }
 
-const getMasBuscados = async (req, res) => {
+export const getMasBuscados = async (req, res) => {
   try {
-    const productos = await Product.find()
-      .sort({ vistas: -1 })
-      .limit(10)
+    const productos = await Product.find().sort({ vistas: -1 }).limit(10)
     res.json(productos)
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
-}
-
-module.exports = {
-  getProducts,
-  getProductById,
-  getCategorias,
-  getMarcas,
-  getCategoriasAgrupadas,
-  getProductsByCategoriaPadre,
-  getDescuentos,
-  getMasBuscados
 }

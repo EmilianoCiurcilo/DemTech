@@ -1,5 +1,5 @@
-const puppeteer = require('puppeteer')
-const Product = require('../models/Product')
+import puppeteer from 'puppeteer'
+import Product from '../models/Product.js'
 
 const CATEGORIAS = [
   { nombre: 'Procesadores AMD', cate: 27, scrapeSpecs: true },
@@ -211,4 +211,4 @@ const scrapeCompraGamer = async () => {
   }
 }
 
-module.exports = scrapeCompraGamer
+export default scrapeCompraGamer

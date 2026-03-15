@@ -95,10 +95,13 @@ function Home() {
 
   return (
     <div className="min-h-screen" style={{ background: '#08080f', color: 'white' }}>
-      <Navbar 
-  onBusqueda={handleBusqueda} 
+      <Navbar
+  onBusqueda={handleBusqueda}
   busqueda={busqueda}
   onBusquedaKeyDown={handleBusquedaSubmit}
+  onBusquedaSubmit={() => {
+    if (busqueda.trim()) navigate(`/productos?busqueda=${encodeURIComponent(busqueda.trim())}`)
+  }}
 />
 
       {/* Banner placeholder */}

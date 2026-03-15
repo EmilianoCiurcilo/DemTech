@@ -1,4 +1,4 @@
-const mongoose = require('mongoose')
+import mongoose from 'mongoose'
 
 const productSchema = new mongoose.Schema({
   nombre: { type: String, required: true },
@@ -21,4 +21,4 @@ const productSchema = new mongoose.Schema({
 
 productSchema.index({ nombre: 1, tienda: 1 }, { unique: true })
 
-module.exports = mongoose.model('Product', productSchema)
+export default mongoose.model('Product', productSchema)

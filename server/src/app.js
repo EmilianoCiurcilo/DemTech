@@ -1,11 +1,10 @@
-const express = require('express')
-const cors = require('cors')
-const dotenv = require('dotenv')
-const connectDB = require('./config/db')
-const productRoutes = require('./routes/productRoutes')
-const authRoutes = require('./routes/authRoutes')
-const favoriteRoutes = require('./routes/favoriteRoutes')
-
+import express from 'express'
+import cors from 'cors'
+import dotenv from 'dotenv'
+import connectDB from './config/db.js'
+import productRoutes from './routes/productRoutes.js'
+import authRoutes from './routes/authRoutes.js'
+import favoriteRoutes from './routes/favoriteRoutes.js'
 
 dotenv.config()
 connectDB()
