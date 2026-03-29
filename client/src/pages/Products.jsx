@@ -8,7 +8,7 @@ import { addFavorite, removeFavorite, getFavorites } from '../services/productSe
 import CategoryIcon from '../components/CategoryIcon'
 import ScrollArrow from '../components/ScrollArrow'
 
-const API = 'http://localhost:3001/api'
+const API = '${import.meta.env.VITE_API_URL}/api'
 
 function Products() {
   const navigate = useNavigate()

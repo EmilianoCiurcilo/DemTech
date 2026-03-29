@@ -1,5 +1,9 @@
+import dotenv from 'dotenv'
+dotenv.config()
+
 import puppeteer from 'puppeteer'
 import Product from '../models/Product.js'
+import mongoose from 'mongoose'
 
 const CATEGORIAS = [
   { nombre: 'Procesadores AMD', cate: 27, scrapeSpecs: true },
@@ -50,12 +54,10 @@ const CATEGORIAS = [
 
 const extraerSpecs = async (page, item) => {
   try {
-    // Abrimos el producto en una pestaña nueva
     const nuevaPagina = await page.browser().newPage()
     
     await nuevaPagina.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36')
 
-    // Interceptamos la navegación para capturar la URL
     await nuevaPagina.goto('https://www.compragamer.com/productos', {
       waitUntil: 'networkidle2'
     })
@@ -77,10 +79,10 @@ const extraerSpecs = async (page, item) => {
 const scrapearCategoria = async (page, categoria) => {
   console.log(`\n📦 Scrapeando categoría: ${categoria.nombre}`)
 
-    await page.goto(`https://www.compragamer.com/productos?categoria=1&cate=${categoria.cate}`, {
+  await page.goto(`https://www.compragamer.com/productos?categoria=1&cate=${categoria.cate}`, {
     waitUntil: 'networkidle2',
     timeout: 60000
-    })
+  })
 
   await page.waitForSelector('.product-card', { timeout: 15000 })
   await new Promise(r => setTimeout(r, 3000))
@@ -102,48 +104,48 @@ const scrapearCategoria = async (page, categoria) => {
   await new Promise(r => setTimeout(r, 2000))
 
   const productos = await page.evaluate((categoriaNombre) => {
-  const items = document.querySelectorAll('.product-card')
-  const resultado = []
+    const items = document.querySelectorAll('.product-card')
+    const resultado = []
 
-  items.forEach(item => {
-    const nombre = item.querySelector('[class*="title"], [class*="name"], h2, h3')?.innerText?.trim()
-    const imagen = item.querySelector('img')?.src
-    const url = item.querySelector('a')?.href || ''
+    items.forEach(item => {
+      const nombre = item.querySelector('[class*="title"], [class*="name"], h2, h3')?.innerText?.trim()
+      const imagen = item.querySelector('img')?.src
+      const url = item.querySelector('a')?.href || ''
 
-    const precioActualEl = item.querySelector('[class*="price--current"], [class*="txt_price"]')
-    const precioAnteriorEl = item.querySelector('[class*="price--previous"]')
-    const precioContainer = item.querySelector('[class*="price"], [class*="precio"]')
+      const precioActualEl = item.querySelector('[class*="price--current"], [class*="txt_price"]')
+      const precioAnteriorEl = item.querySelector('[class*="price--previous"]')
+      const precioContainer = item.querySelector('[class*="price"], [class*="precio"]')
 
-    const limpiarPrecio = (texto) => {
-      if (!texto) return null
-      const match = texto.replace(/\./g, '').replace(',', '.').match(/[\d]+/)
-      return match ? parseFloat(match[0]) : null
-    }
+      const limpiarPrecio = (texto) => {
+        if (!texto) return null
+        const match = texto.replace(/\./g, '').replace(',', '.').match(/[\d]+/)
+        return match ? parseFloat(match[0]) : null
+      }
 
-    const precioActual = limpiarPrecio(precioActualEl?.innerText)
-    const precioAnterior = limpiarPrecio(precioAnteriorEl?.innerText)
-    const precioFinal = precioActual || limpiarPrecio(precioContainer?.innerText?.split('\n')[0])
+      const precioActual = limpiarPrecio(precioActualEl?.innerText)
+      const precioAnterior = limpiarPrecio(precioAnteriorEl?.innerText)
+      const precioFinal = precioActual || limpiarPrecio(precioContainer?.innerText?.split('\n')[0])
 
-    if (nombre && precioFinal && precioFinal > 0) {
-      resultado.push({
-        nombre,
-        precio: precioFinal,
-        precioAnterior: precioAnterior || null,
-        descuento: precioAnterior && precioFinal
-          ? Math.round(((precioAnterior - precioFinal) / precioAnterior) * 100)
-          : 0,
-        imagen,
-        url,
-        categoria: categoriaNombre
-      })
-    }
-  })
+      if (nombre && precioFinal && precioFinal > 0) {
+        resultado.push({
+          nombre,
+          precio: precioFinal,
+          precioAnterior: precioAnterior || null,
+          descuento: precioAnterior && precioFinal
+            ? Math.round(((precioAnterior - precioFinal) / precioAnterior) * 100)
+            : 0,
+          imagen,
+          url,
+          categoria: categoriaNombre
+        })
+      }
+    })
 
-  return resultado
-}, categoria.nombre)
+    return resultado
+  }, categoria.nombre)
 
   console.log('URL primer producto:', productos[0]?.url)
-console.log('Nombre primer producto:', productos[0]?.nombre)
+  console.log('Nombre primer producto:', productos[0]?.nombre)
 
   if (categoria.scrapeSpecs) {
     console.log(`🔬 Extrayendo specs de ${productos.length} productos...`)
@@ -162,6 +164,9 @@ console.log('Nombre primer producto:', productos[0]?.nombre)
 }
 
 const scrapeCompraGamer = async () => {
+  await mongoose.connect(process.env.MONGO_URI)
+  console.log('✅ MongoDB conectado')
+
   console.log('🚀 Iniciando scraper de Compra Gamer...')
   
   const browser = await puppeteer.launch({
@@ -192,12 +197,10 @@ const scrapeCompraGamer = async () => {
           totalGuardados++
         }
 
-        // Pausa entre categorías para no saturar el servidor
         await new Promise(r => setTimeout(r, 2000))
 
       } catch (error) {
         console.error(`❌ Error en categoría ${categoria.nombre}:`, error.message)
-        // Si falla una categoría continuamos con la siguiente
         continue
       }
     }
@@ -208,7 +211,9 @@ const scrapeCompraGamer = async () => {
     console.error('❌ Error general:', error.message)
   } finally {
     await browser.close()
+    await mongoose.disconnect()
+    console.log('🔌 MongoDB desconectado')
   }
 }
 
-export default scrapeCompraGamer
+scrapeCompraGamer()

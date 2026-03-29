@@ -1,3 +1,5 @@
+import dotenv from 'dotenv'
+dotenv.config()
 import Product from '../models/Product.js'
 import puppeteer from 'puppeteer'
 import mongoose from 'mongoose'
@@ -37,7 +39,7 @@ const CATEGORIAS = [
 ]
 
 async function scrapeMexx() {
-  await mongoose.connect('mongodb://localhost:27017/pcargentina')
+  await mongoose.connect(process.env.MONGO_URI)
   console.log('✅ MongoDB conectado')
 
   const browser = await puppeteer.launch({ headless: true })

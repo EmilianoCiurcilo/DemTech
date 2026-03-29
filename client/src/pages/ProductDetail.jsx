@@ -7,7 +7,7 @@ import { addFavorite, removeFavorite, getFavorites } from '../services/productSe
 import favoritoIcon from '../assets/favorito.svg'
 import nofavoritoIcon from '../assets/no-favorito.svg'
 
-const API = 'http://localhost:3001/api'
+const API = `${import.meta.env.VITE_API_URL}/api`
 
 function ProductDetail() {
   const { id } = useParams()
